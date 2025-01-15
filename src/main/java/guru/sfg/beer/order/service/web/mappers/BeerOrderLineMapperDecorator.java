@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import guru.sfg.beer.order.service.domain.BeerOrderLine;
 import guru.sfg.beer.order.service.services.BeerService;
 import guru.sfg.beer.order.service.web.model.BeerOrderLineDto;
-import guru.springframework.msscbeerservice.web.model.BeerDto;
+import guru.sfg.brewery.model.BeerDto;
 
 public class BeerOrderLineMapperDecorator implements BeerOrderLineMapper {
 	
@@ -32,7 +32,7 @@ public class BeerOrderLineMapperDecorator implements BeerOrderLineMapper {
 
         beerDtoOptional.ifPresent(beerDto -> {
             orderLineDto.setBeerName(beerDto.getBeerName());
-            orderLineDto.setBeerStyle(beerDto.getBeerStyle().name());
+            orderLineDto.setBeerStyle(beerDto.getBeerStyle());
             orderLineDto.setPrice(beerDto.getPrice());
             orderLineDto.setBeerId(beerDto.getId());
         });
