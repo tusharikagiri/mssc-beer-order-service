@@ -7,8 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import guru.sfg.beer.order.service.domain.BeerOrderLine;
 import guru.sfg.beer.order.service.services.BeerService;
-import guru.sfg.beer.order.service.web.model.BeerOrderLineDto;
 import guru.sfg.brewery.model.BeerDto;
+import guru.sfg.brewery.model.BeerOrderLineDto;
 
 public class BeerOrderLineMapperDecorator implements BeerOrderLineMapper {
 	
