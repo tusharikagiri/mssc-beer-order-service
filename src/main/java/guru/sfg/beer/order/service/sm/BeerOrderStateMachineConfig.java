@@ -46,17 +46,23 @@ public class BeerOrderStateMachineConfig
 		transitions.withExternal()
 		.source(BeerOrderStatusEnum.NEW).target(BeerOrderStatusEnum.VALIDATION_PENDING).event(BeerOrderEventEnum.VALIDATE_ORDER)
 		.action(validateOrderAction)
-		.and()
-		.withExternal()
+		.and().withExternal()
 		.source(BeerOrderStatusEnum.NEW).target(BeerOrderStatusEnum.VALIDATED).event(BeerOrderEventEnum.VALIDATION_PASSED)
-		.and()
-		.withExternal()
+		.and().withExternal()
 		.source(BeerOrderStatusEnum.NEW).target(BeerOrderStatusEnum.VAILDATION_EXCEPTION).event(BeerOrderEventEnum.VALIDATION_FAILED)
-		.and()
-		.withExternal()
+		.and().withExternal()
 		.source(BeerOrderStatusEnum.VALIDATED).target(BeerOrderStatusEnum.ALLOCATE_PENDING)
 		.event(BeerOrderEventEnum.ALLOCATE_ORDER)
-		.action(allocationOrderAction);
+		.action(allocationOrderAction)
+		.and().withExternal()
+		.source(BeerOrderStatusEnum.ALLOCATE_PENDING).target(BeerOrderStatusEnum.ALLOCATED)
+		.event(BeerOrderEventEnum.ALLOCATION_SUCCESS)
+		.and().withExternal()
+		.source(BeerOrderStatusEnum.ALLOCATE_PENDING).target(BeerOrderStatusEnum.AlLOCATION_EXCEPTION)
+		.event(BeerOrderEventEnum.ALLOCATION_FAILED)
+		.and().withExternal()
+		.source(BeerOrderStatusEnum.ALLOCATE_PENDING).target(BeerOrderStatusEnum.PENDING_INVENTORY)
+		.event(BeerOrderEventEnum.ALLOCATION_NO_INVENTORY);
 	}
 	
 	@Override
