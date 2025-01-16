@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class BeerDto {
     private UUID id = null;
-    private Integer version = null;
+    private Integer version;
 
     @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssZ", shape=JsonFormat.Shape.STRING)
     private OffsetDateTime createdDate = null;

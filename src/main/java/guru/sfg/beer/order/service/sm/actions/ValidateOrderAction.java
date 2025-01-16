@@ -4,7 +4,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.jms.core.JmsTemplate;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
@@ -28,7 +27,6 @@ public class ValidateOrderAction implements Action<BeerOrderStatusEnum, BeerOrde
 	private final BeerOrderRepository beerOrderRepository;
 	private final BeerOrderMapper beerOrderMapper;
 	private final JmsTemplate jmsTemplate;
-	private final JmsConfig jmsConfig;
 
 	@Override
 	public void execute(StateContext<BeerOrderStatusEnum, BeerOrderEventEnum> context) {
