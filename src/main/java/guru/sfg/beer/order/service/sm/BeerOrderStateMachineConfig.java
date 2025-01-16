@@ -5,12 +5,17 @@ import java.util.EnumSet;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
+import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
+import org.springframework.statemachine.listener.StateMachineListenerAdapter;
+import org.springframework.statemachine.state.State;
 
 import guru.sfg.beer.order.service.domain.BeerOrderEventEnum;
 import guru.sfg.beer.order.service.domain.BeerOrderStatusEnum;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Configuration
 @EnableStateMachineFactory
 public class BeerOrderStateMachineConfig
@@ -39,5 +44,17 @@ public class BeerOrderStateMachineConfig
 		.and()
 		.withExternal()
 		.source(BeerOrderStatusEnum.NEW).target(BeerOrderStatusEnum.VAILDATION_EXCEPTION).event(BeerOrderEventEnum.VALIDATION_FAILED);
+	}
+	
+	@Override
+	public void configure(StateMachineConfigurationConfigurer<BeerOrderStatusEnum, BeerOrderEventEnum> config) throws Exception {
+		StateMachineListenerAdapter<BeerOrderStatusEnum, BeerOrderEventEnum> adapter = new StateMachineListenerAdapter<BeerOrderStatusEnum, BeerOrderEventEnum>() {
+			@Override
+			public void stateChanged(State<BeerOrderStatusEnum, BeerOrderEventEnum> from, State<BeerOrderStatusEnum, BeerOrderEventEnum> to) {
+				log.info(String.format("stateChanged(from: %s, to: %s", from, to));
+			}
+		};
+
+		config.withConfiguration().listener(adapter);
 	}
 }
