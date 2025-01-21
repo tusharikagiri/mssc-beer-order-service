@@ -16,6 +16,7 @@ import guru.sfg.beer.order.service.repositories.BeerOrderRepository;
 import guru.sfg.beer.order.service.sm.BeerOrderStatusChangeInterceptor;
 import guru.sfg.brewery.model.BeerOrderDto;
 import guru.sfg.brewery.model.events.ValidateOrderResult;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -61,6 +62,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 		return sm;
 	}
 
+	@Transactional
 	@Override
 	public void processValidationResult(UUID beerOrderId, Boolean isValid) {
 		BeerOrder savedBeerOrder = beerOrderRepository.findOneById(beerOrderId);
@@ -111,6 +113,12 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 	public void beerOrderAllocationFailed(BeerOrderDto beerOrderDto) {
 		BeerOrder beerOrder = beerOrderRepository.findOneById(beerOrderDto.getId());
 		sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_FAILED);
+	}
+
+	@Override
+	public void beerOrderPickerUp(UUID orderId) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

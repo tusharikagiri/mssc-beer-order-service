@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 
 import guru.sfg.beer.order.service.config.JmsConfig;
 import guru.sfg.beer.order.service.services.BeerOrderManager;
-import guru.sfg.beer.order.service.services.BeerOrderManagerImpl;
 import guru.sfg.brewery.model.BeerOrderDto;
 import guru.sfg.brewery.model.events.AllocateOrderResult;
 import lombok.RequiredArgsConstructor;

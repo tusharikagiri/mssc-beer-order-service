@@ -15,6 +15,7 @@ import guru.sfg.beer.order.service.domain.BeerOrderEventEnum;
 import guru.sfg.beer.order.service.domain.BeerOrderStatusEnum;
 import guru.sfg.beer.order.service.repositories.BeerOrderRepository;
 import guru.sfg.beer.order.service.services.BeerOrderManagerImpl;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -23,6 +24,7 @@ public class BeerOrderStatusChangeInterceptor extends StateMachineInterceptorAda
 
 	private final BeerOrderRepository beerOrderRepository;
 	
+	@Transactional
 	@Override
 	public void preStateChange(State<BeerOrderStatusEnum, BeerOrderEventEnum> state,
 			Message<BeerOrderEventEnum> message, Transition<BeerOrderStatusEnum, BeerOrderEventEnum> transition,
