@@ -1,5 +1,6 @@
 package guru.sfg.beer.order.service.services;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.messaging.Message;
@@ -18,7 +19,9 @@ import guru.sfg.brewery.model.BeerOrderDto;
 import guru.sfg.brewery.model.events.ValidateOrderResult;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class BeerOrderManagerImpl implements BeerOrderManager {
@@ -116,9 +119,16 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 	}
 
 	@Override
-	public void beerOrderPickerUp(UUID orderId) {
+	public void beerOrderPickerUp(UUID beerOrderId) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void cancelBeerOrder(UUID beerOrderId) {		
+		beerOrderRepository.findById(beerOrderId).ifPresentOrElse(beerOrder -> {
+			sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.CANCEL_ORDER);
+		}, () -> log.error("Beer Order Id not found : " + beerOrderId.toString()));
 	}
 
 }
