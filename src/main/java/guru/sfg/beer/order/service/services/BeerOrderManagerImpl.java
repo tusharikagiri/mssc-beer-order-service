@@ -2,6 +2,8 @@ package guru.sfg.beer.order.service.services;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -63,10 +65,45 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 		sm.start();
 		return sm;
 	}
+	
+	private void awaitStatus(UUID beerOrderId, BeerOrderStatusEnum statusEnum) {
+		AtomicBoolean found = new AtomicBoolean(false);
+		AtomicInteger loopCount = new AtomicInteger(0);
+		
+		while(!found.get()) {
+			
+			if(loopCount.incrementAndGet() > 10) {
+				found.set(true);
+				log.debug("Loop retries exceeded");
+			}
+			
+			beerOrderRepository.findById(beerOrderId).ifPresentOrElse(beerOrder -> {
+				if(beerOrder.getOrderStatus().equals(statusEnum)) {
+					found.set(true);
+					log.debug("Order Found");
+				} else {
+					log.debug("Order status not equal. Expected: " + statusEnum.name() + " Found: " + beerOrder.getOrderStatus().name());
+				}
+			}, () -> {
+				log.error("Order not found with id :" + beerOrderId);
+			});
+			
+			if(!found.get()) {
+				log.debug("Sleeping for retry");
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
 
 	@Transactional
 	@Override
 	public void processValidationResult(UUID beerOrderId, Boolean isValid) {
+		log.info("processValidationResult for beerOrderId "+ beerOrderId + " isValid? " + isValid);
 		Optional<BeerOrder> savedBeerOrder = beerOrderRepository.findById(beerOrderId);
 		
 		if(savedBeerOrder.isEmpty()) {
@@ -76,6 +113,9 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 
 		if (isValid) {
 			sendBeerOrderEvent(savedBeerOrder.get(), BeerOrderEventEnum.VALIDATION_PASSED);
+			
+			//wait for status change
+			awaitStatus(beerOrderId, BeerOrderStatusEnum.VALIDATED);
 			
 			savedBeerOrder = beerOrderRepository.findById(beerOrderId);
 			
@@ -91,6 +131,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 		beerOrderRepository.findById(beerOrderDto.getId()).ifPresentOrElse(beerOrder -> {
 
 			sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_SUCCESS);
+			awaitStatus(beerOrderDto.getId(), BeerOrderStatusEnum.ALLOCATED);
 			updateAllocatedQty(beerOrderDto, beerOrder);
 		}, () -> {
 			log.error("Order not found with id :" + beerOrderDto.getId());
@@ -121,6 +162,7 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 		beerOrderRepository.findById(beerOrderDto.getId()).ifPresentOrElse(beerOrder -> {
 
 			sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_NO_INVENTORY);
+			awaitStatus(beerOrderDto.getId(), BeerOrderStatusEnum.PENDING_INVENTORY);
 			updateAllocatedQty(beerOrderDto, beerOrder);
 		}, () -> {
 			log.error("Order not found with id :" + beerOrderDto.getId());
