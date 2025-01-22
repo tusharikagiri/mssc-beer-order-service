@@ -20,12 +20,28 @@ package guru.sfg.beer.order.service.web.mappers;
 import guru.sfg.beer.order.service.domain.BeerOrder;
 import guru.sfg.brewery.model.BeerOrderDto;
 
+import java.util.UUID;
+
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 @Mapper(uses = {DateMapper.class, BeerOrderLineMapper.class})
 public interface BeerOrderMapper {
 
+	@Mapping(source = "customer.id", target = "customerId", qualifiedByName = "uuidToString")
     BeerOrderDto beerOrderToDto(BeerOrder beerOrder);
 
+	@Mapping(source = "customerId", target = "customer.id", qualifiedByName = "stringToUuid")
     BeerOrder dtoToBeerOrder(BeerOrderDto dto);
+	
+	@Named("uuidToString")
+    default String uuidToString(UUID uuid) {
+        return uuid != null ? uuid.toString() : null;
+    }
+
+    @Named("stringToUuid")
+    default UUID stringToUuid(String id) {
+        return id != null ? UUID.fromString(id) : null;
+    }
 }

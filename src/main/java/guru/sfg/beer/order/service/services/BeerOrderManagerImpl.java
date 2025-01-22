@@ -16,7 +16,6 @@ import guru.sfg.beer.order.service.domain.BeerOrderStatusEnum;
 import guru.sfg.beer.order.service.repositories.BeerOrderRepository;
 import guru.sfg.beer.order.service.sm.BeerOrderStatusChangeInterceptor;
 import guru.sfg.brewery.model.BeerOrderDto;
-import guru.sfg.brewery.model.events.ValidateOrderResult;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,59 +67,83 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
 	@Transactional
 	@Override
 	public void processValidationResult(UUID beerOrderId, Boolean isValid) {
-		BeerOrder savedBeerOrder = beerOrderRepository.findOneById(beerOrderId);
+		Optional<BeerOrder> savedBeerOrder = beerOrderRepository.findById(beerOrderId);
+		
+		if(savedBeerOrder.isEmpty()) {
+			log.error("Order not found with id :" + beerOrderId);
+			return;
+		}
 
 		if (isValid) {
-			sendBeerOrderEvent(savedBeerOrder, BeerOrderEventEnum.VALIDATION_PASSED);
+			sendBeerOrderEvent(savedBeerOrder.get(), BeerOrderEventEnum.VALIDATION_PASSED);
 			
-			savedBeerOrder = beerOrderRepository.findOneById(beerOrderId);
+			savedBeerOrder = beerOrderRepository.findById(beerOrderId);
 			
-			sendBeerOrderEvent(savedBeerOrder, BeerOrderEventEnum.ALLOCATE_ORDER);
+			sendBeerOrderEvent(savedBeerOrder.get(), BeerOrderEventEnum.ALLOCATE_ORDER);
 		} else {
-			sendBeerOrderEvent(savedBeerOrder, BeerOrderEventEnum.VALIDATION_FAILED);
+			sendBeerOrderEvent(savedBeerOrder.get(), BeerOrderEventEnum.VALIDATION_FAILED);
 		}
 
 	}
 
 	@Override
 	public void beerOrderAllocationPassed(BeerOrderDto beerOrderDto) {
-		BeerOrder beerOrder = beerOrderRepository.findOneById(beerOrderDto.getId());
-		sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_SUCCESS);
-		
-		updateAllocatedQty(beerOrderDto, beerOrder);
+		beerOrderRepository.findById(beerOrderDto.getId()).ifPresentOrElse(beerOrder -> {
+
+			sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_SUCCESS);
+			updateAllocatedQty(beerOrderDto, beerOrder);
+		}, () -> {
+			log.error("Order not found with id :" + beerOrderDto.getId());
+		});
 	}
 
 	private void updateAllocatedQty(BeerOrderDto beerOrderDto, BeerOrder beerOrder) {
-		BeerOrder allocatedOrder = beerOrderRepository.findOneById(beerOrderDto.getId());
-		
-		allocatedOrder.getBeerOrderLines().forEach(beerOrderLine -> {
+		Optional<BeerOrder> allocatedOrder = beerOrderRepository.findById(beerOrderDto.getId());
+
+		if (allocatedOrder.isEmpty()) {
+			log.error("Order not found with id :" + beerOrderDto.getId());
+			return;
+		}
+
+		allocatedOrder.get().getBeerOrderLines().forEach(beerOrderLine -> {
 			beerOrderDto.getBeerOrderLines().forEach(beerOrderLineDto -> {
-				if(beerOrderLine.getId().equals(beerOrderLineDto.getId())) {
+				if (beerOrderLine.getId().equals(beerOrderLineDto.getId())) {
 					beerOrderLine.setQuantityAllocated(beerOrderLineDto.getQuantityAllocated());
 				}
 			});
 		});
-		
-		beerOrderRepository.saveAndFlush(allocatedOrder);
+
+		beerOrderRepository.saveAndFlush(allocatedOrder.get());
 	}
 
 	@Override
 	public void beerOrderAllocationPendingInventory(BeerOrderDto beerOrderDto) {
-		BeerOrder beerOrder = beerOrderRepository.findOneById(beerOrderDto.getId());
-		sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_NO_INVENTORY);
-		
-		updateAllocatedQty(beerOrderDto, beerOrder);
+		beerOrderRepository.findById(beerOrderDto.getId()).ifPresentOrElse(beerOrder -> {
+
+			sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_NO_INVENTORY);
+			updateAllocatedQty(beerOrderDto, beerOrder);
+		}, () -> {
+			log.error("Order not found with id :" + beerOrderDto.getId());
+		});
 	}
 
 	@Override
 	public void beerOrderAllocationFailed(BeerOrderDto beerOrderDto) {
-		BeerOrder beerOrder = beerOrderRepository.findOneById(beerOrderDto.getId());
-		sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_FAILED);
+		beerOrderRepository.findById(beerOrderDto.getId()).ifPresentOrElse(beerOrder -> {
+			sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.ALLOCATION_FAILED);
+		}, () -> {
+			log.error("Order not found with id :" + beerOrderDto.getId());
+		});
+		
 	}
 
 	@Override
 	public void beerOrderPickerUp(UUID beerOrderId) {
-		// TODO Auto-generated method stub
+		beerOrderRepository.findById(beerOrderId).ifPresentOrElse(beerOrder -> {
+			sendBeerOrderEvent(beerOrder, BeerOrderEventEnum.BEERORDER_PICKED_UP);
+		}, () ->{
+			log.error("Order not found!" + beerOrderId.toString());
+		});
 		
 	}
 
