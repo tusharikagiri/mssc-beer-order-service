@@ -16,49 +16,63 @@
  */
 package guru.sfg.beer.order.service.domain;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Set;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Version;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Created by jt on 2019-01-26.
  */
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
-public class Customer extends BaseEntity {
+public class Customer {
 
-    @Builder
-    public Customer(UUID id, Long version, Timestamp createdDate, Timestamp lastModifiedDate, String customerName,
-                    UUID apiKey, Set<BeerOrder> beerOrders) {
-        super(id, version, createdDate, lastModifiedDate);
-        this.customerName = customerName;
-        this.apiKey = apiKey;
-        this.beerOrders = beerOrders;
-    }
+	@Id
+	@GeneratedValue
+	@JdbcTypeCode(Types.VARCHAR)
+	@Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
+	private UUID id;
 
-    private String customerName;
+	@Version
+	private Long version;
 
-    @JdbcTypeCode(Types.VARCHAR)
-    @Column(length = 36, columnDefinition = "varchar(36)")
-    private UUID apiKey;
+	@CreationTimestamp
+	@Column(updatable = false)
+	private Timestamp createdDate;
 
-    @OneToMany(mappedBy = "customer")
-    private Set<BeerOrder> beerOrders;
+	@UpdateTimestamp
+	private Timestamp lastModifiedDate;
+
+	private String customerName;
+
+	@JdbcTypeCode(Types.VARCHAR)
+	@Column(length = 36, columnDefinition = "varchar(36)")
+	private UUID apiKey;
+
+	@OneToMany(mappedBy = "customer")
+	private Set<BeerOrder> beerOrders;
+
+	public boolean isNew() {
+		return this.id == null;
+	}
 
 }
