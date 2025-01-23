@@ -2,7 +2,6 @@ package guru.sfg.beer.order.service.services;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,19 +87,6 @@ public class BeerOrderManagerTestIT {
 	}
 
 	@Test
-	void testWorking() {
-
-		UUID customerId = UUID.randomUUID();
-		UUID orderId = UUID.randomUUID();
-
-		// You can use the DSL directly from the extension field
-		wireMockServer.stubFor(get("/api/v1/customers/" + customerId + "/orders/" + orderId).willReturn(ok()));
-
-		wireMockServer.verify(getRequestedFor(urlEqualTo("/api/v1/customers/" + customerId + "/orders/" + orderId)));
-
-	}
-
-	@Test
 	void testNewToAllocated() {
 
 		BeerDto beerDto = BeerDto.builder().id(beerId).upc("12345").build();
@@ -139,12 +125,12 @@ public class BeerOrderManagerTestIT {
 		BeerOrder beerOrder = createBeerOrder();
 		beerOrder.setCustomerRef("fail-validation");
 
-		BeerOrder savedBeerOrder = beerOrderManager.newBeerOrder(beerOrder);
+		beerOrderManager.newBeerOrder(beerOrder);
 
 		await().untilAsserted(() -> {
 			BeerOrder foundBeerOrder = beerOrderRepository.findById(beerOrder.getId()).get();
 
-			assertEquals(BeerOrderStatusEnum.VAILDATION_EXCEPTION, foundBeerOrder.getOrderStatus());
+			assertEquals(BeerOrderStatusEnum.VALIDATION_EXCEPTION, foundBeerOrder.getOrderStatus());
 		});		
 	}
 	
@@ -186,6 +172,8 @@ public class BeerOrderManagerTestIT {
 		}
 		BeerOrder beerOrder = createBeerOrder();
 		beerOrder.setCustomerRef("partial-allocation");
+		
+		beerOrderManager.newBeerOrder(beerOrder);
 
 		await().untilAsserted(() -> {
 			BeerOrder foundBeerOrder = beerOrderRepository.findById(beerOrder.getId()).get();

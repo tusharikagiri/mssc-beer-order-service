@@ -40,7 +40,7 @@ public class BeerOrderStateMachineConfig
 		.end(BeerOrderStatusEnum.DELIVERED)
 		.end(BeerOrderStatusEnum.CANCELLED)
 		.end(BeerOrderStatusEnum.DELIVERY_EXCEPTION)
-		.end(BeerOrderStatusEnum.VAILDATION_EXCEPTION)
+		.end(BeerOrderStatusEnum.VALIDATION_EXCEPTION)
 		.end(BeerOrderStatusEnum.AlLOCATION_EXCEPTION);
 	}
 	
@@ -58,7 +58,7 @@ public class BeerOrderStateMachineConfig
 		.source(BeerOrderStatusEnum.VALIDATION_PENDING).target(BeerOrderStatusEnum.CANCELLED)
 		.event(BeerOrderEventEnum.CANCEL_ORDER)
 		.and().withExternal()
-		.source(BeerOrderStatusEnum.VALIDATION_PENDING).target(BeerOrderStatusEnum.VAILDATION_EXCEPTION)
+		.source(BeerOrderStatusEnum.VALIDATION_PENDING).target(BeerOrderStatusEnum.VALIDATION_EXCEPTION)
 		.event(BeerOrderEventEnum.VALIDATION_FAILED)
 		.action(validationFailureAction)
 		.and().withExternal()
